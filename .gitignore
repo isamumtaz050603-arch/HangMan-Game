@@ -1,69 +1,117 @@
-# Prerequisites
-*.d
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <ctime>
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+using namespace std;
 
-# Precompiled Headers
-*.gch
-*.pch
+// Function to print the current state of the hangman gallows
+void drawHangman(int wrongGuesses) {
+    cout << "\n";
+    cout << "  +---+\n";
+    cout << "  |   |\n";
+    cout << "  " << (wrongGuesses >= 1 ? "O" : " ") << "   |\n";
+    cout << " " << (wrongGuesses >= 3 ? "/" : " ") << (wrongGuesses >= 2 ? "|" : " ") << (wrongGuesses >= 4 ? "\\" : " ") << "  |\n";
+    cout << " " << (wrongGuesses >= 5 ? "/" : " ") << " " << (wrongGuesses >= 6 ? "\\" : " ") << "  |\n";
+    cout << "     ===\n";
+    cout << "\n";
+}
 
-# Linker files
-*.ilk
+int main() {
+    // Seed the random number generator
+    srand(static_cast<unsigned int>(time(0)));
 
-# Debugger Files
-*.pdb
+    // A fixed array of secret words instead of a vector
+    const int WORD_LIST_SIZE = 8;
+    string wordList[WORD_LIST_SIZE] = {
+        "programming", "computer", "developer", "algorithm", 
+        "variable", "function", "pointer", "compiler"
+    };
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-*.so.*
+    // Pick a random word from the array
+    string secretWord = wordList[rand() % WORD_LIST_SIZE];
+    
+    // Create a string filled with underscores to represent hidden letters
+    string guessedWord(secretWord.length(), '_');
 
+    int wrongGuesses = 0;
+    const int maxGuesses = 6;
 
-# Fortran module files
-*.mod
-*.smod
+    // Fixed array to track guessed letters up to a maximum possible alphabet size
+    char lettersGuessed[26];
+    int uniqueGuessesCount = 0;
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+    cout << "=============================\n";
+    cout << "    Welcome to C++ Hangman   \n";
+    cout << "=============================\n";
 
-# Executables
-*.exe
-*.out
-*.app
+    // Main game loop
+    while (wrongGuesses < maxGuesses && guessedWord != secretWord) {
+        drawHangman(wrongGuesses);
+        
+        // Display current progress with spaces for readability
+        cout << "Word: ";
+        for (int i = 0; i < guessedWord.length(); ++i) {
+            cout << guessedWord[i] << " ";
+        }
+        cout << "\n";
 
-# Build directories
-build/
-Build/
-build-*/
+        // Display previously guessed letters using a basic loop
+        cout << "Guessed letters: ";
+        for (int i = 0; i < uniqueGuessesCount; ++i) {
+            cout << lettersGuessed[i] << " ";
+        }
+        cout << "\n";
 
-# CMake generated files
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-install_manifest.txt
-compile_commands.json
+        // Get player input
+        cout << "Enter a letter: ";
+        char guess;
+        cin >> guess;
+        guess = tolower(guess); // Ensure input is case-insensitive
 
-# Temporary files
-*.tmp
-*.log
-*.bak
-*.swp
+        // Check if the letter was already guessed using a manual loop instead of std::find
+        bool alreadyGuessed = false;
+        for (int i = 0; i < uniqueGuessesCount; ++i) {
+            if (lettersGuessed[i] == guess) {
+                alreadyGuessed = true;
+                break;
+            }
+        }
 
-# vcpkg
-vcpkg_installed/
+        if (alreadyGuessed) {
+            cout << "\nYou already guessed '" << guess << "'. Try a different one!\n";
+            continue;
+        }
 
-# debug information files
-*.dwo
+        // Add the new guess to our array track
+        lettersGuessed[uniqueGuessesCount] = guess;
+        uniqueGuessesCount++;
 
-# test output & cache
-Testing/
-.cache/
+        // Check if the guessed letter is in the secret word
+        bool found = false;
+        for (int i = 0; i < secretWord.length(); ++i) {
+            if (secretWord[i] == guess) {
+                guessedWord[i] = guess;
+                found = true;
+            }
+        }
+
+        if (found) {
+            cout << "\nGood guess!\n";
+        } else {
+            cout << "\nWrong guess!\n";
+            wrongGuesses++;
+        }
+    }
+
+    // End game screen
+    drawHangman(wrongGuesses);
+
+    if (guessedWord == secretWord) {
+        cout << "?? Congratulations! You guessed the word: " << secretWord << "\n";
+    } else {
+        cout << "?? Game Over! The word was: " << secretWord << "\n";
+    }
+
+    return 0;
+}
